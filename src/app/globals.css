@@ -1,0 +1,67 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --color-paper: #f3f1eb;
+  --color-paper-2: #e8e4da;
+  --color-ink: #1c1917;
+  --color-ink-soft: #44403c;
+  --color-muted: #78716c;
+  --color-line: #e4e0d6;
+  --color-line-strong: #d4cfc3;
+  --color-card: #fffcf8;
+  --color-teal: #0f766e;
+  --color-teal-dark: #115e59;
+  --color-teal-soft: #e6f4f1;
+  --color-low: #3f6212;
+  --color-low-soft: #f1f6e6;
+  --color-moderate: #a16207;
+  --color-moderate-soft: #fbf3df;
+  --color-high: #c2410c;
+  --color-high-soft: #ffedd5;
+  --color-critical: #b91c1c;
+  --color-critical-soft: #fee2e2;
+}
+
+html {
+  height: 100%;
+}
+
+body {
+  min-height: 100%;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-teal);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: #99f6e4;
+}
+
+table {
+  border-collapse: collapse;
+}
+
+@media print {
+  aside,
+  .no-print {
+    display: none !important;
+  }
+
+  body,
+  main {
+    background: white !important;
+  }
+
+  .print-area {
+    margin: 0 !important;
+    max-width: none !important;
+    padding: 0 !important;
+  }
+}
