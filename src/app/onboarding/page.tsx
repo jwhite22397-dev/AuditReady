@@ -13,14 +13,15 @@ export default function OnboardingPage() {
   const router = useRouter();
   const [error, setError] = useState("");
   const [joinCode, setJoinCode] = useState("");
+  const [leaving, setLeaving] = useState(false);
   const form = useForm({ defaultValues: { name: "", jobTitle: "Security Analyst" } });
   const session = repo?.getSession();
 
   useEffect(() => {
-    if (!ready) return;
+    if (!ready || leaving) return;
     if (!session) router.replace("/login");
     else if (session.organizationId) router.replace("/dashboard");
-  }, [ready, session, router]);
+  }, [ready, session, router, leaving]);
 
   return (
     <main className="mx-auto flex min-h-screen max-w-lg flex-col justify-center px-5">
@@ -36,10 +37,12 @@ export default function OnboardingPage() {
             return;
           }
           if (!repo) return;
+          setLeaving(true);
           try {
             await repo.createOrganization(parsed.data);
             router.push("/vendors/new");
           } catch (caught) {
+            setLeaving(false);
             setError(publicErrorMessage(caught));
           }
         })}
@@ -52,10 +55,12 @@ export default function OnboardingPage() {
       <form className="mt-8 space-y-3 border-t border-line pt-6" onSubmit={async (event) => {
         event.preventDefault();
         if (!repo) return;
+        setLeaving(true);
         try {
           await repo.acceptInvite(joinCode);
           router.push("/dashboard");
         } catch (caught) {
+          setLeaving(false);
           setError(publicErrorMessage(caught));
         }
       }}>

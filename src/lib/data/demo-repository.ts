@@ -185,8 +185,8 @@ export class DemoRepository {
   }
 
   async acceptInvite(code: string) {
-    await acceptInvite(this.requireDb(), this.requireSession(), code, new Date().toISOString());
-    this.session = sessionForUser(this.requireDb(), this.requireSession().userId);
+    const membership = await acceptInvite(this.requireDb(), this.requireSession(), code, new Date().toISOString());
+    this.session = { userId: membership.userId, organizationId: membership.organizationId, role: membership.role };
     await this.commit();
   }
 

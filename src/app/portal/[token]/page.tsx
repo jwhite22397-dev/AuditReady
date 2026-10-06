@@ -2,7 +2,7 @@
 
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { DOCUMENT_TYPES } from "@/lib/domain/types";
+import { DOCUMENT_TYPES, type DocumentType } from "@/lib/domain/types";
 import { DOCUMENT_TYPE_LABEL } from "@/lib/domain/labels";
 import { publicErrorMessage } from "@/lib/domain/errors";
 import { useWorkspace } from "@/components/providers";
@@ -49,6 +49,7 @@ function PortalForm({ token, initial, repo, onReload }: { token: string; initial
   const [view, setView] = useState(initial);
   const [error, setError] = useState("");
   const [info, setInfo] = useState("");
+  const [docTypes, setDocTypes] = useState<Record<string, DocumentType>>({});
   const [answers, setAnswers] = useState<Record<string, PortalAnswerInput>>(() => Object.fromEntries(initial.questions.map((question) => [question.id, {
     questionId: question.id,
     answerBoolean: question.response?.answerBoolean ?? null,
@@ -100,13 +101,13 @@ function PortalForm({ token, initial, repo, onReload }: { token: string; initial
                     <TextArea className="mt-2" disabled={view.locked} value={answer.answerText} onChange={(event) => setAnswers({ ...answers, [question.id]: { ...answer, answerText: event.target.value } })} />
                   ) : null}
                   {question.type === "file_request" && !view.locked ? (
-                    <form className="mt-2 flex flex-wrap items-end gap-2" onSubmit={async (event) => {
+                    <form className="mt-2 grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end" onSubmit={async (event) => {
                       event.preventDefault();
                       const input = event.currentTarget.elements.namedItem("file");
                       const file = input instanceof HTMLInputElement ? input.files?.[0] : undefined;
                       if (!file) return;
                       try {
-                        await repo.addPortalDocument(token, file, { questionId: question.id, documentType: "other" });
+                        await repo.addPortalDocument(token, file, { questionId: question.id, documentType: docTypes[question.id] ?? "other" });
                         setError("");
                         setInfo("File uploaded.");
                         await reload();
@@ -114,6 +115,11 @@ function PortalForm({ token, initial, repo, onReload }: { token: string; initial
                         setError(publicErrorMessage(caught));
                       }
                     }}>
+                      <Field label="Document type">
+                        <SelectInput value={docTypes[question.id] ?? "other"} onChange={(event) => setDocTypes({ ...docTypes, [question.id]: event.target.value as DocumentType })}>
+                          {DOCUMENT_TYPES.map((type) => <option key={type} value={type}>{DOCUMENT_TYPE_LABEL[type]}</option>)}
+                        </SelectInput>
+                      </Field>
                       <Field label="Evidence file"><input name="file" type="file" className="text-sm" /></Field>
                       <Button type="submit" variant="secondary">Upload</Button>
                     </form>

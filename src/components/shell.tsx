@@ -9,7 +9,7 @@ import { roleHasPermission } from "@/lib/domain/permissions";
 import { publicErrorMessage } from "@/lib/domain/errors";
 import { useWorkspace } from "./providers";
 import { DevPanel } from "./dev-panel";
-import { Button, cn } from "./ui";
+import { Button, cn, SelectInput } from "./ui";
 
 const NAV = [
   { href: "/dashboard", label: "Dashboard" },
@@ -37,6 +37,10 @@ export function Shell({ children }: { children: ReactNode }) {
   const notifications = repo && session ? repo.listNotifications() : [];
   const unread = notifications.filter((item) => !item.readAt).length;
   const vendors = useMemo(() => (repo && session && nonce >= 0 ? repo.listVendors({ search: query }) : []), [repo, session, query, nonce]);
+  const orgs = repo && session && nonce >= 0 ? repo.listOrganizations() : [];
+  function switchWorkspace(organizationId: string) {
+    void repo?.setOrganization(organizationId).then(() => router.push("/dashboard")).catch((caught: unknown) => setError(publicErrorMessage(caught)));
+  }
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -66,6 +70,16 @@ export function Shell({ children }: { children: ReactNode }) {
         <div className="border-b border-line px-4 py-4">
           <Link href="/dashboard" className="text-sm font-semibold tracking-[0.14em]">AUDITREADY</Link>
           <p className="mt-1 truncate text-sm text-ink-soft">{org?.name}</p>
+          {orgs.length > 1 ? (
+            <SelectInput
+              aria-label="Workspace"
+              className="mt-2"
+              value={org?.id ?? ""}
+              onChange={(event) => switchWorkspace(event.target.value)}
+            >
+              {orgs.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+            </SelectInput>
+          ) : null}
         </div>
         <nav className="flex flex-1 flex-col gap-0.5 p-2" aria-label="Primary">
           {NAV.map((item) => (
@@ -92,6 +106,11 @@ export function Shell({ children }: { children: ReactNode }) {
               <Link key={item.href} href={item.href} className="shrink-0 text-sm text-ink-soft">{item.label}</Link>
             ))}
           </nav>
+          {orgs.length > 1 ? (
+            <SelectInput aria-label="Workspace" className="max-w-40 lg:hidden" value={org?.id ?? ""} onChange={(event) => switchWorkspace(event.target.value)}>
+              {orgs.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+            </SelectInput>
+          ) : null}
           <button className="ml-auto inline-flex h-9 items-center gap-2 rounded-md border border-line bg-card px-3 text-sm text-muted" onClick={() => setOpen(true)}>
             <Search className="size-4" aria-hidden />
             Search

@@ -247,6 +247,22 @@ describe("demo repository", () => {
     expect(report.executiveSummary).toContain("Northstar Cloud");
     expect(report.modelSummary).toContain("Inherent risk");
   });
+
+  it("opens the invited workspace after a member already belongs to another organization", async () => {
+    const repo = new DemoRepository(new MemoryStorage(), new MemoryBlobStore());
+    await repo.init();
+    await repo.signIn("priya@acme.example", DEMO_PASSWORD);
+    const invite = await repo.inviteMember({ email: "casey@example.com", role: "analyst" });
+    await repo.signOut();
+    await repo.signUp({ fullName: "Casey Ng", email: "casey@example.com", password: DEMO_PASSWORD });
+    await repo.createOrganization({ name: "Casey Labs", jobTitle: "Founder" });
+    const first = repo.getSession()?.organizationId;
+    await repo.acceptInvite(invite.code);
+    expect(repo.organization()?.name).toBe("Acme Technologies");
+    expect(repo.getSession()?.organizationId).not.toBe(first);
+    expect(repo.getSession()?.role).toBe("analyst");
+    expect(repo.listOrganizations().map((item) => item.name).sort()).toEqual(["Acme Technologies", "Casey Labs"]);
+  });
 });
 
 describe("supabase change tracking", () => {

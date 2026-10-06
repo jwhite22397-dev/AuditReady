@@ -18,6 +18,7 @@ export default function FindingPage() {
   const [closure, setClosure] = useState("");
   const [action, setAction] = useState({ requiredAction: "", vendorResponse: "", targetDate: "", status: "open" as const });
   const [acceptance, setAcceptance] = useState({ businessJustification: "", compensatingControls: "", expiresOn: "" });
+  const [verifyNotes, setVerifyNotes] = useState<Record<string, string>>({});
   void nonce;
   if (!repo) return null;
   let detail: ReturnType<typeof repo.getFindingDetail>;
@@ -84,10 +85,17 @@ export default function FindingPage() {
               <p className="text-muted">{item.status} · target {formatDate(item.targetDate)}</p>
               {item.vendorResponse ? <p>Vendor: {item.vendorResponse}</p> : null}
               {item.analystVerification ? <p>Verified: {item.analystVerification}</p> : null}
-              {canWrite && item.status !== "verified" ? <Button className="mt-2" variant="secondary" onClick={() => {
-                const verification = window.prompt("What did you verify?");
-                if (verification) void run(() => repo.verifyRemediation(item.id, verification));
-              }}>Verify</Button> : null}
+              {canWrite && item.status !== "verified" ? (
+                <form className="mt-2 grid gap-2" onSubmit={(event) => {
+                  event.preventDefault();
+                  void run(() => repo.verifyRemediation(item.id, verifyNotes[item.id] ?? ""));
+                }}>
+                  <Field label="Verification notes">
+                    <TextArea value={verifyNotes[item.id] ?? ""} onChange={(event) => setVerifyNotes({ ...verifyNotes, [item.id]: event.target.value })} />
+                  </Field>
+                  <Button type="submit" variant="secondary">Verify remediation</Button>
+                </form>
+              ) : null}
             </li>
           ))}
         </ul>
